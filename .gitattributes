@@ -1,0 +1,5 @@
+# gitattributes(5) file
+*.[135ch]	ident
+*.txt		ident
+Makefile	ident
+*.mk		ident

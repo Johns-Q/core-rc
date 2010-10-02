@@ -1,0 +1,11 @@
+# gitignore(5) file
+*.[oa]
+*~
+.*.swp
+.gdb_history
+# work directories
+chaos
+peg-0.1.4
+# generated files
+www/html
+rc_test
