@@ -1,0 +1,3 @@
+[submodule "core-array"]
+	path = core-array
+	url = git://core-array.git.sourceforge.net/gitroot/core-array/core-array
