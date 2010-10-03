@@ -25,7 +25,7 @@ GIT_REV := $(shell git describe --always 2>/dev/null)
 
 CC	:= gcc
 OPTIM	:= -march=native -O2 -fomit-frame-pointer
-CFLAGS	= $(OPTIM) -W -Wall -Wextra -g -pipe -DCORE_RC_TEST \
+CFLAGS	= $(OPTIM) -W -Wall -Wextra -g -pipe -DCORE_RC_TEST -DDEBUG_CORE_RC \
 	-DVERSION='$(VERSION)' $(if $(GIT_REV), -DGIT_REV='"$(GIT_REV)"')
 #STATIC= --static
 LIBS	= $(STATIC)

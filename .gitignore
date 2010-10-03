@@ -7,5 +7,6 @@
 chaos
 peg-0.1.4
 # generated files
+core-rc_parser.c
 www/html
 rc_test
