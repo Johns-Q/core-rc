@@ -39,6 +39,10 @@ all:	rc_test
 #----------------------------------------------------------------------------
 #	Modules
 
+core-array/core-array.mk:
+	git submodule init core-array
+	git submodule update core-array
+
 include core-array/core-array.mk
 
 #----------------------------------------------------------------------------
