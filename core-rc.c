@@ -61,6 +61,8 @@
 ///
 /// @{
 
+#define _GNU_SOURCE	1		///< fix stpcpy strchrnul
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
