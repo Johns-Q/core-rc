@@ -21,6 +21,27 @@
 //////////////////////////////////////////////////////////////////////////////
 
 ///
+///	@mainpage
+///
+///	core-rc is a simple module for processing structured and readables
+///	configuration files.
+///	Complete module < 20k (+5k core-array) with ~ 2000 source code lines.
+///
+///	Example how a configuration file can look like:
+///	@code
+///	dia-show = [
+///		fullscreen = true	; start with fullscreen
+///		delay = 30		; slideshow delay in s
+///	]
+///	; or if you prefer this style
+///	dia-show.fullscreen = true
+///	dia-show.delay = 30
+///	@endcode
+///
+///	@ref CoreRc	The core runtime configuration module.
+///
+
+///
 ///	@defgroup CoreRc	The core runtime configuration module.
 ///
 ///	This module contains the runtime configuration and configuration file
@@ -37,6 +58,11 @@
 ///
 ///	A simple example (incomplete) how to use core-rc:
 ///	@code
+///		#include "core-array/core-array.h"
+///		#include "core-rc/core-rc.h"
+///
+///		...
+///
 ///		Config * config;
 ///		config = ConfigReadFile(0, NULL, "my.core-rc");
 ///	@endcode
@@ -763,7 +789,7 @@ int ConfigGetObject(const ConfigObject * config, const ConfigObject ** result,
 **	Get config integer object.
 **
 **	@param config		config dictionary
-**	@param[out] result	string result
+**	@param[out] result	signed integer result
 **	@param ...		list of strings NULL terminated, to select value
 **
 **	@returns true if value found at index in dictionary.
@@ -788,10 +814,38 @@ int ConfigGetInteger(const ConfigObject * config, ssize_t * result, ...)
 }
 
 /**
+**	Get config boolean object.
+**
+**	@param config		config dictionary
+**	@param ...		list of strings NULL terminated, to select value
+**
+**	@retval -1	if index didn't exists in dictionary.
+**	@retval	true	if value is not false.
+**	@retval	false	if value is 'false' or 0.
+*/
+int ConfigGetBoolean(const ConfigObject * config, ...)
+{
+    va_list ap;
+    const ConfigObject *value;
+
+    va_start(ap, config);
+    value = ConfigGet(config, ap);
+    va_end(ap);
+
+    if (ConfigIsFixed(value)) {
+	return ConfigInteger(value);
+    }
+    if (value) {
+	fprintf(stderr, "value isn't a fixed integer\n");
+    }
+    return -1;
+}
+
+/**
 **	Get config double object.
 **
 **	@param config		config dictionary
-**	@param[out] result	string result
+**	@param[out] result	double result
 **	@param ...		list of strings NULL terminated, to select value
 **
 **	@returns true if value found at index in dictionary.
@@ -875,6 +929,9 @@ int ConfigGetArray(const ConfigObject * config, const ConfigObject ** result,
 /**
 **	Get first value from config array.
 **
+**	Search (inclusive) for the first index that is equal to or greater
+**	than index.
+**
 **	@param array		config array value
 **	@param[in,out] index	config index value
 */
@@ -892,6 +949,8 @@ const ConfigObject *ConfigArrayFirst(const ConfigObject * array,
 /**
 **	Get next value from config array.
 **
+**	Search (exclusive) for the next index that is greater than index.
+**
 **	@param array		config array value
 **	@param[in,out] index	config index value
 */
@@ -907,6 +966,9 @@ const ConfigObject *ConfigArrayNext(const ConfigObject * array,
 
 /**
 **	Get first value with integer key from config array.
+**
+**	Search (inclusive) for the first index that is equal to or greater
+**	than index.
 **
 **	@param array		config array value
 **	@param[in,out] index	config index value
@@ -930,6 +992,8 @@ const ConfigObject *ConfigArrayFirstFixedKey(const ConfigObject * array,
 
 /**
 **	Get next value with integer key from config array.
+**
+**	Search (exclusive) for the next index that is greater than index.
 **
 **	@param array		config array value
 **	@param[in,out] index	config index value
@@ -1309,6 +1373,9 @@ static void ParseLvalue(void)
 
 /**
 **	Generate assign operator
+**
+**	@param index	lvalue
+**	@param value	value associated with index
 */
 static void ParseAssign(const ConfigObject * index, const ConfigObject * value)
 {
@@ -1338,6 +1405,9 @@ static void ParseAssign(const ConfigObject * index, const ConfigObject * value)
 
 /**
 **	Generate dot operator
+**
+**	@param global	lvalue
+**	@param index	select index of global lvalue
 */
 static void ParseDot(const ConfigObject * global, const ConfigObject * index)
 {
@@ -1376,6 +1446,11 @@ static void ParseDot(const ConfigObject * global, const ConfigObject * index)
 
 /**
 **	Generate string .
+**
+**	Concat the strings.
+**
+**	@param o1	string object
+**	@param o2	strong object
 */
 static void ParseStringCat(const ConfigObject * o1, const ConfigObject * o2)
 {
@@ -1418,6 +1493,10 @@ static void ParseVariable(const ConfigObject * v)
 
 /**
 **	Macro of parser generator, to read next bytes
+**
+**	@param buf		buffer read position
+**	@param[out] result	number of bytes read
+**	@param max_size		how many free bytes are in buffer
 */
 #define YY_INPUT(buf, result, max_size) \
     do { \
@@ -1798,6 +1877,8 @@ int ConfigWriteFile(const Config * config, const char *filename)
 
 /**
 **	Release all memory used by config module.
+**
+**	@param config	config dictionary
 **
 **	@todo only one config currently supported.
 */
