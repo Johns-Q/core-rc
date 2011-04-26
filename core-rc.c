@@ -1,7 +1,7 @@
 ///
 ///	@file core-rc.c		@brief core runtime configuration functions
 ///
-///	Copyright (c) 2009, 2010 by Lutz Sammer.  All Rights Reserved.
+///	Copyright (c) 2009 - 2011 by Lutz Sammer.  All Rights Reserved.
 ///
 ///	Contributor(s):
 ///
@@ -287,7 +287,7 @@ static const char *StringPoolAlloc(StringPool * pool, const char *string)
     node = malloc(STRING_POOL_SIZE);	// page aligned nodes
     node->Next = pool->Pools;
     pool->Pools = node;
-    node->Free = node->Size = STRING_POOL_SIZE - sizeof(node) + sizeof(char);
+    node->Free = node->Size = STRING_POOL_SIZE - sizeof(*node) + sizeof(char);
 
   out:
     dst = node->Data + node->Size - node->Free;
@@ -603,6 +603,10 @@ static inline ConfigObject *ConfigNewArray(const Array * array)
 */
 static inline ConfigObject *ConfigNewWord(const char *string)
 {
+    if (!string) {
+	fprintf(stderr, "null string\n");
+	string = "";
+    }
     return StringPoolIntern(ConfigStrings, string);
 }
 
@@ -820,8 +824,8 @@ int ConfigGetInteger(const ConfigObject * config, ssize_t * result, ...)
 **	@param ...		list of strings NULL terminated, to select value
 **
 **	@retval -1	if index didn't exists in dictionary.
-**	@retval	true	if value is not false.
-**	@retval	false	if value is 'false' or 0.
+**	@retval true	if value is not false.
+**	@retval false	if value is 'false' or 0.
 */
 int ConfigGetBoolean(const ConfigObject * config, ...)
 {
@@ -1572,7 +1576,7 @@ struct _saved_state_
 /**
 **	Push parser state for includes.
 **
-**	@param filename	config include file name
+**	@param filename config include file name
 */
 static void ParseRecursive(const char *filename)
 {
@@ -1754,7 +1758,7 @@ Config *ConfigRead(int ni, const ConfigImport * import, FILE * file)
 **
 **	@param ni	number of import contants
 **	@param import	import constants
-**	@param filename	configuration file name, use "-" for stdin.
+**	@param filename configuration file name, use "-" for stdin.
 */
 Config *ConfigReadFile(int ni, const ConfigImport * import,
     const char *filename)
@@ -1845,7 +1849,7 @@ int ConfigWrite(const Config * config, FILE * stream)
 **	Write configuration to file name.
 **
 **	@param config	config dictionary
-**	@param filename	output filename
+**	@param filename output filename
 **
 **	@returns false if no failures, true otherwise.
 */
