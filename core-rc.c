@@ -159,7 +159,19 @@ static inline void ConfigObjectDel(ConfigObject * object)
 
     /// end of various program segments
     ///@{
+#ifdef TCC
 extern char etext, edata, end;
+
+#define ETEXT etext
+#define EDATA edata
+#define END end
+#else
+extern char _etext, _edata, _end;
+
+#define ETEXT _etext
+#define EDATA _edata
+#define END _end
+#endif
 
     ///@}
 
@@ -267,7 +279,7 @@ static const char *StringPoolAlloc(StringPool * pool, const char *string)
     char *dst;
     StringNode *node;
 
-    if (string < &edata) {		// string from C constant area
+    if (string < &EDATA) {		// string from C constant area
 #ifdef DEBUG_CORE_RC
 	fprintf(stderr, "EDATA %s\n", string);
 #endif
