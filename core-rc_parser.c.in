@@ -239,126 +239,126 @@ YY_RULE(int) yy_configs(); /* 1 */
 
 YY_ACTION(void) yy_1_end_of_line(char *yytext, int yyleng)
 {
-  yytext = yytext; yyleng = yyleng;
+  (void)yytext; (void)yyleng;
   yyprintf((stderr, "do yy_1_end_of_line\n"));
    ++ParseLineNr; ;
 }
 YY_ACTION(void) yy_1_float(char *yytext, int yyleng)
 {
-  yytext = yytext; yyleng = yyleng;
+  (void)yytext; (void)yyleng;
   yyprintf((stderr, "do yy_1_float\n"));
    ParsePushF(strtod(yytext, NULL)); ;
 }
 YY_ACTION(void) yy_1_integer(char *yytext, int yyleng)
 {
-  yytext = yytext; yyleng = yyleng;
+  (void)yytext; (void)yyleng;
   yyprintf((stderr, "do yy_1_integer\n"));
    ParsePushI(strtol(yytext, NULL, 0)); ;
 }
 YY_ACTION(void) yy_1_character(char *yytext, int yyleng)
 {
-  yytext = yytext; yyleng = yyleng;
+  (void)yytext; (void)yyleng;
   yyprintf((stderr, "do yy_1_character\n"));
    ParsePushI(*yytext); ;
 }
 YY_ACTION(void) yy_1_string(char *yytext, int yyleng)
 {
-  yytext = yytext; yyleng = yyleng;
+  (void)yytext; (void)yyleng;
   yyprintf((stderr, "do yy_1_string\n"));
    ParsePushS(yytext); ;
 }
 YY_ACTION(void) yy_1_identifier(char *yytext, int yyleng)
 {
-  yytext = yytext; yyleng = yyleng;
+  (void)yytext; (void)yyleng;
   yyprintf((stderr, "do yy_1_identifier\n"));
    ParsePushS(yytext); ;
 }
 YY_ACTION(void) yy_4_expr0(char *yytext, int yyleng)
 {
-  yytext = yytext; yyleng = yyleng;
+  (void)yytext; (void)yyleng;
   yyprintf((stderr, "do yy_4_expr0\n"));
    ParseVariable(ParsePop()); ;
 }
 YY_ACTION(void) yy_3_expr0(char *yytext, int yyleng)
 {
-  yytext = yytext; yyleng = yyleng;
+  (void)yytext; (void)yyleng;
   yyprintf((stderr, "do yy_3_expr0\n"));
    ParsePushI(1); ;
 }
 YY_ACTION(void) yy_2_expr0(char *yytext, int yyleng)
 {
-  yytext = yytext; yyleng = yyleng;
+  (void)yytext; (void)yyleng;
   yyprintf((stderr, "do yy_2_expr0\n"));
    ParsePushI(0); ;
 }
 YY_ACTION(void) yy_1_expr0(char *yytext, int yyleng)
 {
-  yytext = yytext; yyleng = yyleng;
+  (void)yytext; (void)yyleng;
   yyprintf((stderr, "do yy_1_expr0\n"));
    ParsePushNil(); ;
 }
 YY_ACTION(void) yy_1_expr(char *yytext, int yyleng)
 {
-  yytext = yytext; yyleng = yyleng;
+  (void)yytext; (void)yyleng;
   yyprintf((stderr, "do yy_1_expr\n"));
    const ConfigObject * v1 = ParsePop();
 		ParseStringCat(ParsePop(), v1); ;
 }
 YY_ACTION(void) yy_3_array_item(char *yytext, int yyleng)
 {
-  yytext = yytext; yyleng = yyleng;
+  (void)yytext; (void)yyleng;
   yyprintf((stderr, "do yy_3_array_item\n"));
    ParseArrayNextItem(ParsePop()); ;
 }
 YY_ACTION(void) yy_2_array_item(char *yytext, int yyleng)
 {
-  yytext = yytext; yyleng = yyleng;
+  (void)yytext; (void)yyleng;
   yyprintf((stderr, "do yy_2_array_item\n"));
    const ConfigObject * v1 = ParsePop();
 		ParseArrayAddItem(ParsePop(), v1); ;
 }
 YY_ACTION(void) yy_1_array_item(char *yytext, int yyleng)
 {
-  yytext = yytext; yyleng = yyleng;
+  (void)yytext; (void)yyleng;
   yyprintf((stderr, "do yy_1_array_item\n"));
    const ConfigObject * v1 = ParsePop();
 		ParseArrayAddItem(ParsePop(), v1); ;
 }
 YY_ACTION(void) yy_2_array(char *yytext, int yyleng)
 {
-  yytext = yytext; yyleng = yyleng;
+  (void)yytext; (void)yyleng;
   yyprintf((stderr, "do yy_2_array\n"));
    ParseArrayFinal(); ;
 }
 YY_ACTION(void) yy_1_array(char *yytext, int yyleng)
 {
-  yytext = yytext; yyleng = yyleng;
+  (void)yytext; (void)yyleng;
   yyprintf((stderr, "do yy_1_array\n"));
    ParseArrayStart(); ;
 }
 YY_ACTION(void) yy_2_lvalue(char *yytext, int yyleng)
 {
-  yytext = yytext; yyleng = yyleng;
+  (void)yytext; (void)yyleng;
   yyprintf((stderr, "do yy_2_lvalue\n"));
    const ConfigObject * v1 = ParsePop();
 		ParseDot(ParsePop(), v1); ;
 }
 YY_ACTION(void) yy_1_lvalue(char *yytext, int yyleng)
 {
-  yytext = yytext; yyleng = yyleng;
+  (void)yytext; (void)yyleng;
   yyprintf((stderr, "do yy_1_lvalue\n"));
    ParseLvalue() ;
 }
 YY_ACTION(void) yy_1_config(char *yytext, int yyleng)
 {
-  yytext = yytext; yyleng = yyleng;
+  (void)yytext; (void)yyleng;
   yyprintf((stderr, "do yy_1_config\n"));
    const ConfigObject * v1 = ParsePop();
 		ParseAssign(ParsePop(), v1); ;
 }
 YY_ACTION(void) yy_1_include(char *yytext, int yyleng)
 {
-  yytext = yytext; yyleng = yyleng;
+  (void)yytext; (void)yyleng;
   yyprintf((stderr, "do yy_1_include\n"));
    ParseInclude(ParsePop()); ;
 }
