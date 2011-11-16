@@ -301,8 +301,8 @@ YY_ACTION(void) yy_1_expr(char *yytext, int yyleng)
 {
   (void)yytext; (void)yyleng;
   yyprintf((stderr, "do yy_1_expr\n"));
-   const ConfigObject * v1 = ParsePop();
-		ParseStringCat(ParsePop(), v1); ;
+   { const ConfigObject * v1 = ParsePop();
+		ParseStringCat(ParsePop(), v1); } ;
 }
 YY_ACTION(void) yy_3_array_item(char *yytext, int yyleng)
 {
@@ -314,15 +314,15 @@ YY_ACTION(void) yy_2_array_item(char *yytext, int yyleng)
 {
   (void)yytext; (void)yyleng;
   yyprintf((stderr, "do yy_2_array_item\n"));
-   const ConfigObject * v1 = ParsePop();
-		ParseArrayAddItem(ParsePop(), v1); ;
+   { const ConfigObject * v1 = ParsePop();
+		ParseArrayAddItem(ParsePop(), v1); } ;
 }
 YY_ACTION(void) yy_1_array_item(char *yytext, int yyleng)
 {
   (void)yytext; (void)yyleng;
   yyprintf((stderr, "do yy_1_array_item\n"));
-   const ConfigObject * v1 = ParsePop();
-		ParseArrayAddItem(ParsePop(), v1); ;
+   { const ConfigObject * v1 = ParsePop();
+		ParseArrayAddItem(ParsePop(), v1); } ;
 }
 YY_ACTION(void) yy_2_array(char *yytext, int yyleng)
 {
@@ -340,8 +340,8 @@ YY_ACTION(void) yy_2_lvalue(char *yytext, int yyleng)
 {
   (void)yytext; (void)yyleng;
   yyprintf((stderr, "do yy_2_lvalue\n"));
-   const ConfigObject * v1 = ParsePop();
-		ParseDot(ParsePop(), v1); ;
+   { const ConfigObject * v1 = ParsePop();
+		ParseDot(ParsePop(), v1); } ;
 }
 YY_ACTION(void) yy_1_lvalue(char *yytext, int yyleng)
 {
@@ -353,8 +353,8 @@ YY_ACTION(void) yy_1_config(char *yytext, int yyleng)
 {
   (void)yytext; (void)yyleng;
   yyprintf((stderr, "do yy_1_config\n"));
-   const ConfigObject * v1 = ParsePop();
-		ParseAssign(ParsePop(), v1); ;
+   { const ConfigObject * v1 = ParsePop();
+		ParseAssign(ParsePop(), v1); } ;
 }
 YY_ACTION(void) yy_1_include(char *yytext, int yyleng)
 {
