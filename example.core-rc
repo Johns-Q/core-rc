@@ -1,7 +1,7 @@
 ;{
 	@file example.core-rc	@brief core runtime configuration example
 
-	Copyright (c) 2009, 2010 by Lutz Sammer.  All Rights Reserved.
+	Copyright (c) 2009, 2010, 2021 by Lutz Sammer.  All Rights Reserved.
 
 	Contributor(s):
 
@@ -22,4 +22,10 @@
 
 ;	this is an end-to-line comment
 ;{	this a a block comment		;}
+
+;	a simple variable(s)
+
+ai = 1
+ad = 1.5e10
+as = "one"
 

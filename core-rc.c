@@ -1,7 +1,7 @@
 ///
 ///	@file core-rc.c		@brief core runtime configuration functions
 ///
-///	Copyright (c) 2009 - 2011 by Lutz Sammer.  All Rights Reserved.
+///	Copyright (c) 2009 - 2011, 2021 by Lutz Sammer.  All Rights Reserved.
 ///
 ///	Contributor(s):
 ///
@@ -27,6 +27,7 @@
 ///	configuration files.
 ///	Complete module < 20k (+5k core-array) with ~ 2000 source code lines.
 ///
+///	@par Example
 ///	Example how a configuration file can look like:
 ///	@code
 ///	dia-show = [
@@ -37,6 +38,17 @@
 ///	dia-show.fullscreen = true
 ///	dia-show.delay = 30
 ///	@endcode
+///
+///	@par Configuration
+///
+///	- #USE_CORE_RC_GET_STRINGS
+///	Include support for the get functions with strings.
+///
+///	- #USE_CORE_RC_PRINT
+///	Include support to print config objects.
+///
+///	- #USE_CORE_RC_WRITE
+///	Include support to write config objects.
 ///
 ///	@ref CoreRc	The core runtime configuration module.
 ///
@@ -101,6 +113,7 @@
 #ifdef CORE_RC_TEST
 #define USE_CORE_RC_PRINT		///< include core-rc print support
 #define USE_CORE_RC_WRITE		///< include core-rc write support
+#define USE_CORE_RC_GET_STRINGS		///< include get functions with strings
 #endif
 
 #include "core-array/core-array.h"
@@ -231,18 +244,25 @@ static inline size_t StringPoolKeygen(int len, const uint8_t * str)
 	    // 64 bit version
 	case 8:
 	    key |= str[7] << 0;
+	    // fallthrough
 	case 7:
 	    key |= str[6] << 8;
+	    // fallthrough
 	case 6:
 	    key |= str[5] << 16;
+	    // fallthrough
 	case 5:
 	    key |= str[4] << 24;
+	    // fallthrough
 	case 4:
 	    key |= (size_t) str[3] << 32;
+	    // fallthrough
 	case 3:
 	    key |= (size_t) str[2] << 40;
+	    // fallthrough
 	case 2:
 	    key |= (size_t) str[1] << 48;
+	    // fallthrough
 	case 1:
 	    key |= (size_t) str[0] << 56;
 	    break;
@@ -250,10 +270,13 @@ static inline size_t StringPoolKeygen(int len, const uint8_t * str)
 	    // 32 bit version
 	case 4:
 	    key |= str[3] << 0;
+	    // fallthrough
 	case 3:
 	    key |= str[2] << 8;
+	    // fallthrough
 	case 2:
 	    key |= str[1] << 16;
+	    // fallthrough
 	case 1:
 	    key |= str[0] << 24;
 	    break;
@@ -369,7 +392,7 @@ static void StringPoolDump(const StringPool * pool, int level)
 **
 **	@returns new empty string pool.
 */
-static StringPool *StringPoolNew(void)
+static inline StringPool *StringPoolNew(void)
 {
     return calloc(1, sizeof(StringPool));
 }
@@ -445,7 +468,7 @@ static ConfigObject *StringPoolIntern(StringPool * pool, const char *string)
     const char *str;
     ConfigObject *object;
 
-#ifdef DEBUG
+#if defined(DEBUG_CORE_RC) || defined(DEBUG)
     object = NULL;
 #endif
     str = string;
@@ -549,6 +572,8 @@ static inline int ConfigIsArray(const ConfigObject * object)
     return object && !((size_t) object & 7);
 }
 
+#if 0
+
 /**
 **	Create a new fixed integer object.
 **
@@ -556,10 +581,11 @@ static inline int ConfigIsArray(const ConfigObject * object)
 **
 **	@returns tagged fixed integer object pointer.
 */
-static inline ConfigObject *ConfigNewFixed(size_t integer)
+static inline ConfigObject *ConfigNewInteger(size_t integer)
 {
     return (ConfigObject *) ((integer << 1) + 1);
 }
+#endif
 
 /**
 **	Create a new floating-point number object.
@@ -568,7 +594,7 @@ static inline ConfigObject *ConfigNewFixed(size_t integer)
 **
 **	@returns tagged floating point object pointer.
 */
-static inline ConfigObject *ConfigNewFloat(double number)
+inline ConfigObject *ConfigNewDouble(double number)
 {
     union
     {
@@ -593,7 +619,7 @@ static inline ConfigObject *ConfigNewFloat(double number)
 **
 **	@todo should use an object pool
 */
-static inline ConfigObject *ConfigNewArray(const Array * array)
+inline ConfigObject *ConfigNewArray(const Array * array)
 {
     ConfigObject *object;
 
@@ -604,7 +630,7 @@ static inline ConfigObject *ConfigNewArray(const Array * array)
 }
 
 /**
-**	Create a new word object.
+**	Create a new string object.
 **
 **	@param string	string converted into fixed string object
 **
@@ -613,17 +639,17 @@ static inline ConfigObject *ConfigNewArray(const Array * array)
 **	@todo should use an object pool
 **	@todo second array string -> object unnecessary
 */
-static inline ConfigObject *ConfigNewWord(const char *string)
+inline ConfigObject *ConfigNewString(const char *string)
 {
     if (!string) {
-	fprintf(stderr, "null string\n");
+	fprintf(stderr, "core-rc: null string\n");
 	string = "";
     }
     return StringPoolIntern(ConfigStrings, string);
 }
 
 /**
-**	Convert fixed object to C integer.
+**	Convert (unchecked) fixed object to C integer.
 **
 **	@param object	tagged object pointer
 **
@@ -635,7 +661,7 @@ static inline ssize_t ConfigInteger(const ConfigObject * object)
 }
 
 /**
-**	Convert float object to C double.
+**	Convert (unchecked) float object to C double.
 *
 **	@param object	tagged object pointer
 **
@@ -658,7 +684,7 @@ static inline double ConfigDouble(const ConfigObject * object)
 }
 
 /**
-**	Convert word object to C string.
+**	Convert (unchecked) word object to C string.
 **
 **	@param object	tagged object pointer
 **
@@ -671,7 +697,7 @@ static inline const char *ConfigString(const ConfigObject * object)
 }
 
 /**
-**	Convert array object to C array.
+**	Convert (unchecked) array object to C array.
 **
 **	@param object	tagged object pointer
 *
@@ -750,6 +776,8 @@ int ConfigCheckArray(const ConfigObject * object, const ConfigObject ** result)
     return 0;
 }
 
+#ifdef USE_CONFIG_RC_GET_STRINGS
+
 /**
 **	Lookup config object.
 **
@@ -758,19 +786,20 @@ int ConfigCheckArray(const ConfigObject * object, const ConfigObject ** result)
 **
 **	@returns object stored in dictionary at index ap
 */
-static const ConfigObject *ConfigGet(const ConfigObject * config, va_list ap)
+static const ConfigObject *ConfigStringsLookup(const ConfigObject * config,
+    va_list ap)
 {
     const char *name;
 
     // loop over all index keys
-    while ((name = va_arg(ap, const char *)))
+    while ((name = va_arg(ap, const ConfigObject *)))
     {
 	if (!ConfigIsArray(config)) {
 	    fprintf(stderr, "array required for index '%s'\n", name);
 	    return NULL;
 	}
 	config = (const ConfigObject *)
-	    ArrayGet(ConfigArray(config), (size_t) ConfigNewWord(name));
+	    ArrayGet(ConfigArray(config), (size_t) ConfigNewString(name));
     }
     return config;
 }
@@ -780,18 +809,18 @@ static const ConfigObject *ConfigGet(const ConfigObject * config, va_list ap)
 **
 **	@param config		config dictionary
 **	@param[out] result	object result
-**	@param ...		list of strings NULL terminated, to select value
+**	@param ...		list of objects NULL terminated, to select value
 **
 **	@returns true if value found at index in dictionary.
 */
-int ConfigGetObject(const ConfigObject * config, const ConfigObject ** result,
-    ...)
+int ConfigStringsGetObject(const ConfigObject * config,
+    const ConfigObject ** result, ...)
 {
     va_list ap;
     const ConfigObject *value;
 
     va_start(ap, result);
-    value = ConfigGet(config, ap);
+    value = ConfigStringsLookup(config, ap);
     va_end(ap);
 
     if (value) {
@@ -806,17 +835,17 @@ int ConfigGetObject(const ConfigObject * config, const ConfigObject ** result,
 **
 **	@param config		config dictionary
 **	@param[out] result	signed integer result
-**	@param ...		list of strings NULL terminated, to select value
+**	@param ...		list of objects NULL terminated, to select value
 **
 **	@returns true if value found at index in dictionary.
 */
-int ConfigGetInteger(const ConfigObject * config, ssize_t * result, ...)
+int ConfigStringsGetInteger(const ConfigObject * config, ssize_t * result, ...)
 {
     va_list ap;
     const ConfigObject *value;
 
     va_start(ap, result);
-    value = ConfigGet(config, ap);
+    value = ConfigStringsLookup(config, ap);
     va_end(ap);
 
     if (ConfigIsFixed(value)) {
@@ -833,19 +862,19 @@ int ConfigGetInteger(const ConfigObject * config, ssize_t * result, ...)
 **	Get config boolean object.
 **
 **	@param config		config dictionary
-**	@param ...		list of strings NULL terminated, to select value
+**	@param ...		list of objects NULL terminated, to select value
 **
 **	@retval -1	if index didn't exists in dictionary.
-**	@retval true	if value is not false.
-**	@retval false	if value is 'false' or 0.
+**	@retval	true	if value is not false.
+**	@retval	false	if value is 'false' or 0.
 */
-int ConfigGetBoolean(const ConfigObject * config, ...)
+int ConfigStringsGetBoolean(const ConfigObject * config, ...)
 {
     va_list ap;
     const ConfigObject *value;
 
     va_start(ap, config);
-    value = ConfigGet(config, ap);
+    value = ConfigStringsLookup(config, ap);
     va_end(ap);
 
     if (ConfigIsFixed(value)) {
@@ -862,17 +891,17 @@ int ConfigGetBoolean(const ConfigObject * config, ...)
 **
 **	@param config		config dictionary
 **	@param[out] result	double result
-**	@param ...		list of strings NULL terminated, to select value
+**	@param ...		list of objects NULL terminated, to select value
 **
 **	@returns true if value found at index in dictionary.
 */
-int ConfigGetDouble(const ConfigObject * config, double *result, ...)
+int ConfigStringsGetDouble(const ConfigObject * config, double *result, ...)
 {
     va_list ap;
     const ConfigObject *value;
 
     va_start(ap, result);
-    value = ConfigGet(config, ap);
+    value = ConfigStringsLookup(config, ap);
     va_end(ap);
 
     if (ConfigIsFloat(value)) {
@@ -890,17 +919,18 @@ int ConfigGetDouble(const ConfigObject * config, double *result, ...)
 **
 **	@param config		config dictionary
 **	@param[out] result	string result
-**	@param ...		list of strings NULL terminated, to select value
+**	@param ...		list of objects NULL terminated, to select value
 **
 **	@returns true if value found at index in dictionary.
 */
-int ConfigGetString(const ConfigObject * config, const char **result, ...)
+int ConfigStringsGetString(const ConfigObject * config, const char **result,
+    ...)
 {
     va_list ap;
     const ConfigObject *value;
 
     va_start(ap, result);
-    value = ConfigGet(config, ap);
+    value = ConfigStringsLookup(config, ap);
     va_end(ap);
 
     if (ConfigIsWord(value)) {
@@ -918,7 +948,202 @@ int ConfigGetString(const ConfigObject * config, const char **result, ...)
 **
 **	@param config		config dictionary
 **	@param[out] result	array result
-**	@param ...		list of strings NULL terminated, to select value
+**	@param ...		list of objects NULL terminated, to select value
+**
+**	@returns true if value found at index in dictionary.
+*/
+int ConfigStringsGetArray(const ConfigObject * config,
+    const ConfigObject ** result, ...)
+{
+    va_list ap;
+    const ConfigObject *value;
+
+    va_start(ap, result);
+    value = ConfigStringsLookup(config, ap);
+    va_end(ap);
+
+    if (ConfigIsArray(value)) {
+	*result = value;
+	return 1;
+    }
+    if (value) {
+	fprintf(stderr, "value isn't an array\n");
+    }
+    return 0;
+}
+
+#endif // USE_CONFIG_RC_STRINGS
+
+/**
+**	Lookup config object.
+**
+**	@param config	config dictionary or sub array
+**	@param ap	array of objects NULL terminated, to select value
+**
+**	@returns object stored in dictionary at index ap
+*/
+static const ConfigObject *ConfigLookup(const ConfigObject * config,
+    va_list ap)
+{
+    const ConfigObject *index;
+
+    // loop over all index keys
+    while ((index = va_arg(ap, const ConfigObject *)))
+    {
+	if (!ConfigIsArray(config)) {
+	    fprintf(stderr, "array required for index '%p'\n", index);
+	    return NULL;
+	}
+	config = (const ConfigObject *)
+	    ArrayGet(ConfigArray(config), (size_t) index);
+    }
+    return config;
+}
+
+/**
+**	Get config any value object.
+**
+**	@param config		config dictionary
+**	@param[out] result	object result
+**	@param ...		list of objects NULL terminated, to select value
+**
+**	@returns true if value found at index in dictionary.
+*/
+int ConfigGetObject(const ConfigObject * config, const ConfigObject ** result,
+    ...)
+{
+    va_list ap;
+    const ConfigObject *value;
+
+    va_start(ap, result);
+    value = ConfigLookup(config, ap);
+    va_end(ap);
+
+    if (value) {
+	*result = value;
+	return 1;
+    }
+    return 0;
+}
+
+/**
+**	Get config integer object.
+**
+**	@param config		config dictionary
+**	@param[out] result	signed integer result
+**	@param ...		list of objects NULL terminated, to select value
+**
+**	@returns true if value found at index in dictionary.
+*/
+int ConfigGetInteger(const ConfigObject * config, ssize_t * result, ...)
+{
+    va_list ap;
+    const ConfigObject *value;
+
+    va_start(ap, result);
+    value = ConfigLookup(config, ap);
+    va_end(ap);
+
+    if (ConfigIsFixed(value)) {
+	*result = ConfigInteger(value);
+	return 1;
+    }
+    if (value) {
+	fprintf(stderr, "value isn't a fixed integer\n");
+    }
+    return 0;
+}
+
+/**
+**	Get config boolean object.
+**
+**	@param config		config dictionary
+**	@param ...		list of objects NULL terminated, to select value
+**
+**	@retval -1	if index didn't exists in dictionary.
+**	@retval	true	if value is not false.
+**	@retval	false	if value is 'false' or 0.
+*/
+int ConfigGetBoolean(const ConfigObject * config, ...)
+{
+    va_list ap;
+    const ConfigObject *value;
+
+    va_start(ap, config);
+    value = ConfigLookup(config, ap);
+    va_end(ap);
+
+    if (ConfigIsFixed(value)) {
+	return ConfigInteger(value);
+    }
+    if (value) {
+	fprintf(stderr, "value isn't a fixed integer\n");
+    }
+    return -1;
+}
+
+/**
+**	Get config double object.
+**
+**	@param config		config dictionary
+**	@param[out] result	double result
+**	@param ...		list of objects NULL terminated, to select value
+**
+**	@returns true if value found at index in dictionary.
+*/
+int ConfigGetDouble(const ConfigObject * config, double *result, ...)
+{
+    va_list ap;
+    const ConfigObject *value;
+
+    va_start(ap, result);
+    value = ConfigLookup(config, ap);
+    va_end(ap);
+
+    if (ConfigIsFloat(value)) {
+	*result = ConfigDouble(value);
+	return 1;
+    }
+    if (value) {
+	fprintf(stderr, "value isn't a double\n");
+    }
+    return 0;
+}
+
+/**
+**	Get config string object.
+**
+**	@param config		config dictionary
+**	@param[out] result	string result
+**	@param ...		list of objects NULL terminated, to select value
+**
+**	@returns true if value found at index in dictionary.
+*/
+int ConfigGetString(const ConfigObject * config, const char **result, ...)
+{
+    va_list ap;
+    const ConfigObject *value;
+
+    va_start(ap, result);
+    value = ConfigLookup(config, ap);
+    va_end(ap);
+
+    if (ConfigIsWord(value)) {
+	*result = ConfigString(value);
+	return 1;
+    }
+    if (value) {
+	fprintf(stderr, "value isn't a string\n");
+    }
+    return 0;
+}
+
+/**
+**	Get config array object.
+**
+**	@param config		config dictionary
+**	@param[out] result	array result
+**	@param ...		list of objects NULL terminated, to select value
 **
 **	@returns true if value found at index in dictionary.
 */
@@ -929,7 +1154,7 @@ int ConfigGetArray(const ConfigObject * config, const ConfigObject ** result,
     const ConfigObject *value;
 
     va_start(ap, result);
-    value = ConfigGet(config, ap);
+    value = ConfigLookup(config, ap);
     va_end(ap);
 
     if (ConfigIsArray(value)) {
@@ -1250,7 +1475,7 @@ static void ParsePush(const ConfigObject * object)
 */
 static void ParsePushI(int val)
 {
-    ParsePush(ConfigNewFixed(val));
+    ParsePush(ConfigNewInteger(val));
 }
 
 /**
@@ -1260,7 +1485,7 @@ static void ParsePushI(int val)
 */
 static void ParsePushF(double val)
 {
-    ParsePush(ConfigNewFloat(val));
+    ParsePush(ConfigNewDouble(val));
 }
 
 /**
@@ -1270,7 +1495,7 @@ static void ParsePushF(double val)
 */
 static void ParsePushS(const char *val)
 {
-    ParsePush(ConfigNewWord(val));
+    ParsePush(ConfigNewString(val));
 }
 
 /**
@@ -1336,7 +1561,7 @@ static void ParseArrayAddItem(const ConfigObject * index,
 */
 static void ParseArrayNextItem(const ConfigObject * value)
 {
-    ParseArrayAddItem(ConfigNewFixed(ParseCurrentIndex), value);
+    ParseArrayAddItem(ConfigNewInteger(ParseCurrentIndex), value);
 }
 
 /**
@@ -1588,7 +1813,7 @@ struct _saved_state_
 /**
 **	Push parser state for includes.
 **
-**	@param filename config include file name
+**	@param filename	config include file name
 */
 static void ParseRecursive(const char *filename)
 {
@@ -1728,8 +1953,8 @@ Config *ConfigRead(int ni, const ConfigImport * import, FILE * file)
     //	export constants
     //
     for (i = 0; i < ni; ++i) {
-	ArrayIns(&ParseCurrentArray, (size_t) ConfigNewWord(import[i].Index),
-	    (size_t) ConfigNewWord(import[i].Value));
+	ArrayIns(&ParseCurrentArray, (size_t) ConfigNewString(import[i].Index),
+	    (size_t) ConfigNewString(import[i].Value));
     }
 
     ParseGlobalArray = ParseCurrentArray;
@@ -1770,7 +1995,7 @@ Config *ConfigRead(int ni, const ConfigImport * import, FILE * file)
 **
 **	@param ni	number of import contants
 **	@param import	import constants
-**	@param filename configuration file name, use "-" for stdin.
+**	@param filename	configuration file name, use "-" for stdin.
 */
 Config *ConfigReadFile(int ni, const ConfigImport * import,
     const char *filename)
@@ -1861,7 +2086,7 @@ int ConfigWrite(const Config * config, FILE * stream)
 **	Write configuration to file name.
 **
 **	@param config	config dictionary
-**	@param filename output filename
+**	@param filename	output filename
 **
 **	@returns false if no failures, true otherwise.
 */
@@ -1931,7 +2156,7 @@ static void PrintVersion(void)
 #ifdef GIT_REV
 	"(GIT-" GIT_REV ")"
 #endif
-	",\n\t(c) 2009, 2010 by Lutz Sammer\n"
+	",\n\t(c) 2009, 2010, 2021 by Lutz Sammer\n"
 	"\tLicense AGPLv3: GNU Affero General Public License version 3\n");
 }
 
