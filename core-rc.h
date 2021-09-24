@@ -1,7 +1,7 @@
 ///
 ///	@file core-rc.h		@brief core runtime configuration functions
 ///
-///	Copyright (c) 2009, 2011, 2021 by Lutz Sammer.  All Rights Reserved.
+///	Copyright (c) 2009, 2011, 2021 by Lutz Sammer.	All Rights Reserved.
 ///
 ///	Contributor(s):
 ///

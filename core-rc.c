@@ -1,7 +1,7 @@
 ///
 ///	@file core-rc.c		@brief core runtime configuration functions
 ///
-///	Copyright (c) 2009 - 2011, 2021 by Lutz Sammer.  All Rights Reserved.
+///	Copyright (c) 2009 - 2011, 2021 by Lutz Sammer.	 All Rights Reserved.
 ///
 ///	Contributor(s):
 ///
@@ -137,7 +137,7 @@ static inline ConfigObject *ConfigObjectNew(void)
     // object is 4 bytes on 32bit 8 bytes on 64bit.
     object = malloc(sizeof(*object));
 #ifdef DEBUG_CORE_RC
-    if ((size_t) object & 7) {
+    if ((size_t)object & 7) {
 	fprintf(stderr, "Object: %p\n", object);
 	abort();
     }
@@ -255,16 +255,16 @@ static inline size_t StringPoolKeygen(int len, const uint8_t * str)
 	    key |= str[4] << 24;
 	    // fallthrough
 	case 4:
-	    key |= (size_t) str[3] << 32;
+	    key |= (size_t)str[3] << 32;
 	    // fallthrough
 	case 3:
-	    key |= (size_t) str[2] << 40;
+	    key |= (size_t)str[2] << 40;
 	    // fallthrough
 	case 2:
-	    key |= (size_t) str[1] << 48;
+	    key |= (size_t)str[1] << 48;
 	    // fallthrough
 	case 1:
-	    key |= (size_t) str[0] << 56;
+	    key |= (size_t)str[0] << 56;
 	    break;
 #else
 	    // 32 bit version
@@ -355,7 +355,7 @@ static void StringPoolDump0(const Array * array, int level)
 	    ConfigObject *object;
 
 	    object = (ConfigObject *) * value;
-	    string = ((ConfigObject *) ((size_t) object & ~7))->Pointer;
+	    string = ((ConfigObject *) ((size_t)object & ~7))->Pointer;
 	    printf("= '%s'\n", string);
 	} else {
 	    printf("->\n");
@@ -481,7 +481,7 @@ static ConfigObject *StringPoolIntern(StringPool * pool, const char *string)
 	    string = StringPoolAlloc(pool, string);
 	    object = ConfigObjectNew();
 	    object->Pointer = (char *)string;
-	    *val = (size_t) object | 4;
+	    *val = (size_t)object | 4;
 	    object = (ConfigObject *) * val;
 	    break;
 	}
@@ -495,7 +495,7 @@ static ConfigObject *StringPoolIntern(StringPool * pool, const char *string)
 	    int i;
 
 	    object = (ConfigObject *) * val;
-	    old = ((ConfigObject *) ((size_t) object & ~7))->Pointer;
+	    old = ((ConfigObject *) ((size_t)object & ~7))->Pointer;
 
 	    i = strlen(old) - (str - string);
 	    // compare string, if not same
@@ -504,8 +504,8 @@ static ConfigObject *StringPoolIntern(StringPool * pool, const char *string)
 	    }
 	    // take next 4/8 bytes as next key
 	    key = StringPoolKeygen(i, (uint8_t *) old + (str - string));
-	    *val = (size_t) ArrayNew();
-	    ArrayIns((Array **) val, key, (size_t) object);
+	    *val = (size_t)ArrayNew();
+	    ArrayIns((Array **) val, key, (size_t)object);
 	}
 	parent = (Array **) val;
 
@@ -529,7 +529,7 @@ static StringPool *ConfigStrings;	///< storage of parser strings
 */
 static inline int ConfigIsFixed(const ConfigObject * object)
 {
-    return (size_t) object & 1;
+    return (size_t)object & 1;
 }
 
 /**
@@ -539,7 +539,7 @@ static inline int ConfigIsFixed(const ConfigObject * object)
 */
 static inline int ConfigIsFloat(const ConfigObject * object)
 {
-    return !ConfigIsFixed(object) && (size_t) object & 2;
+    return !ConfigIsFixed(object) && (size_t)object & 2;
 }
 
 /**
@@ -549,7 +549,7 @@ static inline int ConfigIsFloat(const ConfigObject * object)
 */
 static inline int ConfigIsPointer(const ConfigObject * object)
 {
-    return object && !((size_t) object & 7);
+    return object && !((size_t)object & 7);
 }
 
 /**
@@ -559,7 +559,7 @@ static inline int ConfigIsPointer(const ConfigObject * object)
 */
 static inline int ConfigIsWord(const ConfigObject * object)
 {
-    return (((size_t) object & 7) == 4);
+    return (((size_t)object & 7) == 4);
 }
 
 /**
@@ -569,7 +569,7 @@ static inline int ConfigIsWord(const ConfigObject * object)
 */
 static inline int ConfigIsArray(const ConfigObject * object)
 {
-    return object && !((size_t) object & 7);
+    return object && !((size_t)object & 7);
 }
 
 #if 0
@@ -679,7 +679,7 @@ static inline double ConfigDouble(const ConfigObject * object)
 	size_t i;
     } c;
 
-    c.i = (size_t) object & ~2;
+    c.i = (size_t)object & ~2;
     return c.f;
 }
 
@@ -692,7 +692,7 @@ static inline double ConfigDouble(const ConfigObject * object)
 */
 static inline const char *ConfigString(const ConfigObject * object)
 {
-    object = (const ConfigObject *)((size_t) object & ~7);
+    object = (const ConfigObject *)((size_t)object & ~7);
     return object->Pointer;
 }
 
@@ -799,7 +799,7 @@ static const ConfigObject *ConfigStringsLookup(const ConfigObject * config,
 	    return NULL;
 	}
 	config = (const ConfigObject *)
-	    ArrayGet(ConfigArray(config), (size_t) ConfigNewString(name));
+	    ArrayGet(ConfigArray(config), (size_t)ConfigNewString(name));
     }
     return config;
 }
@@ -995,7 +995,7 @@ static const ConfigObject *ConfigLookup(const ConfigObject * config,
 	    return NULL;
 	}
 	config = (const ConfigObject *)
-	    ArrayGet(ConfigArray(config), (size_t) index);
+	    ArrayGet(ConfigArray(config), (size_t)index);
     }
     return config;
 }
@@ -1182,8 +1182,7 @@ const ConfigObject *ConfigArrayFirst(const ConfigObject * array,
     const ConfigObject **value;
 
     value =
-	(const ConfigObject **)ArrayFirst(ConfigArray(array),
-	(size_t *) index);
+	(const ConfigObject **)ArrayFirst(ConfigArray(array), (size_t *)index);
     return value ? *value : NULL;
 }
 
@@ -1201,7 +1200,7 @@ const ConfigObject *ConfigArrayNext(const ConfigObject * array,
     const ConfigObject **value;
 
     value =
-	(const ConfigObject **)ArrayNext(ConfigArray(array), (size_t *) index);
+	(const ConfigObject **)ArrayNext(ConfigArray(array), (size_t *)index);
     return value ? *value : NULL;
 }
 
@@ -1220,13 +1219,13 @@ const ConfigObject *ConfigArrayFirstFixedKey(const ConfigObject * array,
     const ConfigObject **value;
 
     value = (const ConfigObject **)
-	ArrayFirst(ConfigArray(array), (size_t *) index);
+	ArrayFirst(ConfigArray(array), (size_t *)index);
     while (value) {
 	if (ConfigIsFixed(*index)) {
 	    return *value;
 	}
 	value = (const ConfigObject **)
-	    ArrayNext(ConfigArray(array), (size_t *) index);
+	    ArrayNext(ConfigArray(array), (size_t *)index);
     }
     return (const ConfigObject *)value;
 }
@@ -1246,7 +1245,7 @@ const ConfigObject *ConfigArrayNextFixedKey(const ConfigObject * array,
 
     do {
 	value = (const ConfigObject **)
-	    ArrayNext(ConfigArray(array), (size_t *) index);
+	    ArrayNext(ConfigArray(array), (size_t *)index);
 	if (!value) {
 	    return (const ConfigObject *)value;
 	}
@@ -1549,7 +1548,7 @@ static void ParseArrayAddItem(const ConfigObject * index,
 	ParseCurrentIndex = ConfigInteger(index) + 1;
 
     }
-    ArrayIns(&ParseCurrentArray, (size_t) index, (size_t) value);
+    ArrayIns(&ParseCurrentArray, (size_t)index, (size_t)value);
 }
 
 /**
@@ -1630,12 +1629,12 @@ static void ParseAssign(const ConfigObject * index, const ConfigObject * value)
     printf("\n");
 #endif
     if (*ParseCurrentLvalue == ParseGlobalArray) {
-	vp = (const ConfigObject **)ArrayIns(ParseCurrentLvalue,
-	    (size_t) index, (size_t) value);
+	vp = (const ConfigObject **)ArrayIns(ParseCurrentLvalue, (size_t)index,
+	    (size_t)value);
 	ParseGlobalArray = *ParseCurrentLvalue;
     } else {
-	vp = (const ConfigObject **)ArrayIns(ParseCurrentLvalue,
-	    (size_t) index, (size_t) value);
+	vp = (const ConfigObject **)ArrayIns(ParseCurrentLvalue, (size_t)index,
+	    (size_t)value);
     }
     if (*vp != value) {
 	// FIXME: value already set, loose memory!
@@ -1663,16 +1662,16 @@ static void ParseDot(const ConfigObject * global, const ConfigObject * index)
     printf("\n");
 #endif
 
-    value = (ConfigObject *) ArrayGet(*ParseCurrentLvalue, (size_t) global);
+    value = (ConfigObject *) ArrayGet(*ParseCurrentLvalue, (size_t)global);
 
     if (!value) {
 	value = ConfigNewArray(ArrayNew());
 	if (*ParseCurrentLvalue == ParseGlobalArray) {
-	    ArrayIns(ParseCurrentLvalue, (size_t) global, (size_t) value);
+	    ArrayIns(ParseCurrentLvalue, (size_t)global, (size_t)value);
 
 	    ParseGlobalArray = *ParseCurrentLvalue;
 	} else {
-	    ArrayIns(ParseCurrentLvalue, (size_t) global, (size_t) value);
+	    ArrayIns(ParseCurrentLvalue, (size_t)global, (size_t)value);
 	}
 
     } else if (!ConfigIsArray(value)) {
@@ -1721,7 +1720,7 @@ static void ParseVariable(const ConfigObject * v)
 {
     const ConfigObject *value;
 
-    value = (const ConfigObject *)ArrayGet(ParseGlobalArray, (size_t) v);
+    value = (const ConfigObject *)ArrayGet(ParseGlobalArray, (size_t)v);
     ParsePush(value);
 }
 
@@ -1953,8 +1952,8 @@ Config *ConfigRead(int ni, const ConfigImport * import, FILE * file)
     //	export constants
     //
     for (i = 0; i < ni; ++i) {
-	ArrayIns(&ParseCurrentArray, (size_t) ConfigNewString(import[i].Index),
-	    (size_t) ConfigNewString(import[i].Value));
+	ArrayIns(&ParseCurrentArray, (size_t)ConfigNewString(import[i].Index),
+	    (size_t)ConfigNewString(import[i].Value));
     }
 
     ParseGlobalArray = ParseCurrentArray;
