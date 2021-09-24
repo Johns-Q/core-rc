@@ -792,7 +792,7 @@ static const ConfigObject *ConfigStringsLookup(const ConfigObject * config,
     const char *name;
 
     // loop over all index keys
-    while ((name = va_arg(ap, const ConfigObject *)))
+    while ((name = va_arg(ap, const char *)))
     {
 	if (!ConfigIsArray(config)) {
 	    fprintf(stderr, "array required for index '%s'\n", name);
