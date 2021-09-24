@@ -776,7 +776,7 @@ int ConfigCheckArray(const ConfigObject * object, const ConfigObject ** result)
     return 0;
 }
 
-#ifdef USE_CONFIG_RC_GET_STRINGS
+#ifdef USE_CORE_RC_GET_STRINGS
 
 /**
 **	Lookup config object.
@@ -972,7 +972,7 @@ int ConfigStringsGetArray(const ConfigObject * config,
     return 0;
 }
 
-#endif // USE_CONFIG_RC_STRINGS
+#endif // USE_CORE_RC_GET_STRINGS
 
 /**
 **	Lookup config object.
