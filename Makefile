@@ -33,7 +33,8 @@ LIBS	= $(STATIC)
 
 HDRS	:= core-rc.h
 OBJS	:= core-rc.o
-FILES	:= Makefile README.txt Changelog AGPL-3.0.txt core-rc.doxyfile
+FILES	:= Makefile README.txt Changelog LICENSE.md AGPL-v3.0.md \
+	core-rc.doxyfile
 
 all:	rc_test
 
