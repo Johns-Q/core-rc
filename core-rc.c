@@ -689,6 +689,18 @@ static inline ssize_t ConfigInteger(const ConfigObject * object)
 }
 
 /**
+**	Convert (unchecked) fixed object to C unsigned integer.
+**
+**	@param object	tagged object pointer
+**
+**	@returns fixed unsigned integer part of object pointer.
+*/
+static inline size_t ConfigUnsigned(const ConfigObject * object)
+{
+    return (size_t)object >> 1;
+}
+
+/**
 **	Convert (unchecked) float object to C double.
 *
 **	@param object	tagged object pointer
@@ -887,6 +899,34 @@ int ConfigStringsGetInteger(const ConfigObject * config, ssize_t * result, ...)
 }
 
 /**
+**	Get config unsigned object.
+**
+**	@param config		config dictionary
+**	@param[out] result	unsigned integer result
+**	@param ...		list of objects NULL terminated, to select value
+**
+**	@returns true if value found at index in dictionary.
+*/
+int ConfigStringsGetUnsigned(const ConfigObject * config, size_t *result, ...)
+{
+    va_list ap;
+    const ConfigObject *value;
+
+    va_start(ap, result);
+    value = ConfigStringsLookup(config, ap);
+    va_end(ap);
+
+    if (ConfigIsFixed(value)) {
+	*result = ConfigInteger(value);
+	return 1;
+    }
+    if (value) {
+	fprintf(stderr, "value isn't a fixed unsigned\n");
+    }
+    return 0;
+}
+
+/**
 **	Get config boolean object.
 **
 **	@param config		config dictionary
@@ -1078,6 +1118,34 @@ int ConfigGetInteger(const ConfigObject * config, ssize_t * result, ...)
     }
     if (value) {
 	fprintf(stderr, "value isn't a fixed integer\n");
+    }
+    return 0;
+}
+
+/**
+**	Get config unsigned object.
+**
+**	@param config		config dictionary
+**	@param[out] result	unsigned integer result
+**	@param ...		list of objects NULL terminated, to select value
+**
+**	@returns true if value found at index in dictionary.
+*/
+int ConfigGetUnsigned(const ConfigObject * config, size_t *result, ...)
+{
+    va_list ap;
+    const ConfigObject *value;
+
+    va_start(ap, result);
+    value = ConfigLookup(config, ap);
+    va_end(ap);
+
+    if (ConfigIsFixed(value)) {
+	*result = ConfigUnsigned(value);
+	return 1;
+    }
+    if (value) {
+	fprintf(stderr, "value isn't a fixed unsigned\n");
     }
     return 0;
 }
