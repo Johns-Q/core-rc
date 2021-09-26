@@ -1,7 +1,7 @@
 ##
 ##	@file core-rc_parser.peg	@brief PE grammer for core-rc file
 ##
-##	Copyright (c) 2009, 2010 by Lutz Sammer.  All Rights Reserved.
+##	Copyright (c) 2009, 2010, 2021 by Lutz Sammer.  All Rights Reserved.
 ##
 ##	Contributor(s):
 ##
@@ -23,6 +23,7 @@
 #
 #	NOTE: the grammer self is also AGPLv3 and (c)
 #
+#
 
 configs <- spaces (include &{YYACCEPT}/ config &{YYACCEPT})* end_of_file
 
@@ -30,14 +31,14 @@ include <- "include" spaces string
 	    { ParseInclude(ParsePop()); }
 
 config <- lvalue '=' spaces expr
-	    { { const ConfigObject * v1 = ParsePop();
-		ParseAssign(ParsePop(), v1); } }
+	    { const ConfigObject * v1 = ParsePop();
+		ParseAssign(ParsePop(), v1); }
 
 lvalue <- identifier
 	    { ParseLvalue() }
 	    ((('.' spaces identifier) / ('[' spaces expr ']' spaces))
-	    { { const ConfigObject * v1 = ParsePop();
-		ParseDot(ParsePop(), v1); } } )*
+	    { const ConfigObject * v1 = ParsePop();
+		ParseDot(ParsePop(), v1); } )*
 
 array <-    { ParseArrayStart(); }
 	'[' spaces (array_item (',' spaces)?)* ']' spaces
@@ -45,18 +46,18 @@ array <-    { ParseArrayStart(); }
 
 array_item
 	<- '[' spaces expr ']' spaces '=' spaces expr
-	    { { const ConfigObject * v1 = ParsePop();
-		ParseArrayAddItem(ParsePop(), v1); } }
+	    { const ConfigObject * v1 = ParsePop();
+		ParseArrayAddItem(ParsePop(), v1); }
 	/ (identifier / word) '=' spaces expr
-	    { { const ConfigObject * v1 = ParsePop();
-		ParseArrayAddItem(ParsePop(), v1); } }
+	    { const ConfigObject * v1 = ParsePop();
+		ParseArrayAddItem(ParsePop(), v1); }
 	/ expr
 	    { ParseArrayNextItem(ParsePop()); }
 
 expr	<- '(' spaces expr ')' spaces
 	/ expr0 '~' spaces expr
-	    { { const ConfigObject * v1 = ParsePop();
-		ParseStringCat(ParsePop(), v1); } }
+	    { const ConfigObject * v1 = ParsePop();
+		ParseStringCat(ParsePop(), v1); }
 	/ expr0
 
 expr0	<- "nil" spaces

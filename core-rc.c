@@ -1786,7 +1786,14 @@ static void ParseVariable(const ConfigObject * v)
 /*
 **	Parser generator generated:
 */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+
 #include "core-rc_parser.c"
+
+#pragma GCC diagnostic pop
 
 /**
 **	Handle parser generator error message.
@@ -1796,19 +1803,20 @@ static void ParseVariable(const ConfigObject * v)
 static void yyerror(const char *message)
 {
     fprintf(stderr, "%s:%d: %s", ParseName, ParseLineNr, message);
-    if (yytext[0]) {
-	fprintf(stderr, " near token '%s'", yytext);
+    if (yyctx->__text[0]) {
+	fprintf(stderr, " near token '%s'", yyctx->__text);
     }
-    if (yypos < yylimit || !feof(ParseFile)) {
-	yybuf[yylimit] = '\0';
+    if (yyctx->__pos < yyctx->__limit || !feof(ParseFile)) {
+	yyctx->__buf[yyctx->__limit] = '\0';
 	fprintf(stderr, " before text \"");
-	while (yypos < yylimit) {
-	    if ('\n' == yybuf[yypos] || '\r' == yybuf[yypos]) {
+	while (yyctx->__pos < yyctx->__limit) {
+	    if ('\n' == yyctx->__buf[yyctx->__pos]
+		|| '\r' == yyctx->__buf[yyctx->__pos]) {
 		break;
 	    }
-	    fputc(yybuf[yypos++], stderr);
+	    fputc(yyctx->__buf[yyctx->__pos++], stderr);
 	}
-	if (yypos == yylimit) {
+	if (yyctx->__pos == yyctx->__limit) {
 	    int c;
 
 	    while (EOF != (c = fgetc(ParseFile)) && '\n' != c && '\r' != c) {
@@ -1829,20 +1837,7 @@ static void yyerror(const char *message)
 struct _saved_state_
 {
     /// parser generator variables
-    //@{
-    char *yybuf;
-    int yybuflen;
-    int yypos;
-    int yylimit;
-    char *yytext;
-    int yytextlen;
-    int yybegin;
-    int yyend;
-    int yytextmax;
-    yythunk *yythunks;
-    int yythunkslen;
-    int yythunkpos;
-    //@}
+    yycontext yyctx;
 
     const char *Name;			///< previous file name
     FILE *File;				///< previous file stream
@@ -1863,18 +1858,7 @@ static void ParseRecursive(const char *filename)
     //
     // Save current state.
     //
-    s.yybuf = yybuf;
-    s.yybuflen = yybuflen;
-    s.yypos = yypos;
-    s.yylimit = yylimit;
-    s.yytext = yytext;
-    s.yytextlen = yytextlen;
-    s.yybegin = yybegin;
-    s.yyend = yyend;
-    s.yytextmax = yytextmax;
-    s.yythunks = yythunks;
-    s.yythunkslen = yythunkslen;
-    s.yythunkpos = yythunkpos;
+    s.yyctx = *yyctx;
     s.Name = ParseName;
     s.File = ParseFile;
     s.LineNr = ParseLineNr;
@@ -1882,18 +1866,7 @@ static void ParseRecursive(const char *filename)
     //
     //	initialize
     //
-    yybuf = 0;
-    yybuflen = 0;
-    yypos = 0;
-    yylimit = 0;
-    yytext = 0;
-    yytextlen = 0;
-    yybegin = 0;
-    yyend = 0;
-    yytextmax = 0;
-    yythunks = 0;
-    yythunkslen = 0;
-    yythunkpos = 0;
+    memset(yyctx, 0, sizeof(yycontext));
 
     file = fopen(filename, "rb");
     if (!file) {
@@ -1934,26 +1907,12 @@ static void ParseRecursive(const char *filename)
     //
     //	cleanup
     //
-    free(yybuf);
-    free(yytext);
-    free(yythunks);
-    //free(yyvals);
+    yyrelease(yyctx);
 
     //
     // Restore current state
     //
-    yybuf = s.yybuf;
-    yybuflen = s.yybuflen;
-    yypos = s.yypos;
-    yylimit = s.yylimit;
-    yytext = s.yytext;
-    yytextlen = s.yytextlen;
-    yybegin = s.yybegin;
-    yyend = s.yyend;
-    yytextmax = s.yytextmax;
-    yythunks = s.yythunks;
-    yythunkslen = s.yythunkslen;
-    yythunkpos = s.yythunkpos;
+    *yyctx = s.yyctx;
     ParseName = s.Name;
     ParseFile = s.File;
     ParseLineNr = s.LineNr;
@@ -2061,11 +2020,7 @@ Config *ConfigRead2(Config * import, FILE * file)
     }
 #endif
 
-    yybuflen = 0;
-    free(yybuf);
-    free(yytext);
-    free(yythunks);
-    //free(yyvals);
+    yyrelease(yyctx);
 
     free(ParseStack);
 
