@@ -76,7 +76,7 @@
 ///		...
 ///
 ///		Config * config;
-///		config = ConfigReadFile(0, NULL, "my.core-rc");
+///		config = ConfigReadFile2(NULL, "my.core-rc");
 ///	@endcode
 ///	Load runtime configuration from "my.core-rc".
 ///	@code
@@ -138,7 +138,7 @@ static inline ConfigObject *ConfigObjectNew(void)
     object = malloc(sizeof(*object));
 #ifdef DEBUG_CORE_RC
     if ((size_t)object & 7) {
-	fprintf(stderr, "Object: %p\n", object);
+	fprintf(stderr, "Object: unaligned %p\n", object);
 	abort();
     }
 #endif
@@ -167,7 +167,7 @@ static inline void ConfigObjectDel(ConfigObject * object)
 ///
 ///	This module handles string-pools.  String pools handles string
 ///	memory managment.  Only one copy of equal strings is stored.
-///	
+///
 /// @{
 
     /// end of various program segments
@@ -337,7 +337,7 @@ static const char *StringPoolAlloc(StringPool * pool, const char *string)
 /**
 **	Helper for string pool dump.
 **
-**	@param array	array of strings in pool 
+**	@param array	array of strings in pool
 **	@param level	indent level
 */
 static void StringPoolDump0(const Array * array, int level)
@@ -542,6 +542,8 @@ static inline int ConfigIsFloat(const ConfigObject * object)
     return !ConfigIsFixed(object) && (size_t)object & 2;
 }
 
+#if 0
+
 /**
 **	Check if object is a pointer object.
 **
@@ -551,6 +553,8 @@ static inline int ConfigIsPointer(const ConfigObject * object)
 {
     return object && !((size_t)object & 7);
 }
+
+#endif
 
 /**
 **	Check if object is a word object.
@@ -612,7 +616,7 @@ inline ConfigObject *ConfigNewDouble(double number)
 
 /**
 **	Create a new array object.
-**	
+**
 **	@param array	core array converted into array object
 **
 **	@returns tagged array object pointer.
@@ -627,6 +631,30 @@ inline ConfigObject *ConfigNewArray(const Array * array)
     object->Pointer = (void *)array;
 
     return object;
+}
+
+/**
+**	Create a new config object.
+**
+**	@param array	core array converted into config object
+**
+**	@returns tagged array object pointer.
+*/
+inline Config *ConfigNewConfig(const Array * array)
+{
+    ConfigObject *object;
+
+    if (!ConfigStrings) {
+	ConfigStrings = StringPoolNew();
+#ifdef DEBUG_CORE_RC
+	fprintf(stderr, "new string pool\n");
+#endif
+    }
+
+    object = ConfigObjectNew();
+    object->Pointer = (void *)array;
+
+    return (Config *) object;
 }
 
 /**
@@ -1254,7 +1282,7 @@ const ConfigObject *ConfigArrayNextFixedKey(const ConfigObject * array,
     return *value;
 }
 
-#ifdef USE_CORE_RC_PRINT
+#if defined(USE_CORE_RC_PRINT) || defined(USE_CORE_RC_WRITE)
 
 /**
 **	Print config object.
@@ -1282,33 +1310,36 @@ void ConfigPrint(const ConfigObject * object, int level, FILE * out)
 	size_t *value;
 	Array *array;
 
-	//fprintf(out, "[\n");
-	fprintf(out, "[;%p\n", object);
 	array = ConfigArray(object);
 	index = 0;
 	value = ArrayFirst(array, &index);
-	while (value) {
-	    const ConfigObject *lvalue;
+	if (value) {
+	    fprintf(out, "[;%p\n", object);
+	    while (value) {
+		const ConfigObject *lvalue;
 
-	    //
-	    //	string 
-	    //
-	    lvalue = (const ConfigObject *)index;
-	    // FIXME: must check if word contains only a-zA-Z0-9_-
-	    if (ConfigIsWord(lvalue)) {
-		fprintf(out, "%*s%s = ", level, "", ConfigString(lvalue));
-	    } else {
-		fprintf(out, "%*s[", level, "");
-		ConfigPrint(lvalue, level + 2, out);
-		fprintf(out, "] = ");
+		//
+		//	string
+		//
+		lvalue = (const ConfigObject *)index;
+		// FIXME: must check if word contains only a-zA-Z0-9_-
+		if (ConfigIsWord(lvalue)) {
+		    fprintf(out, "%*s%s = ", level, "", ConfigString(lvalue));
+		} else {
+		    fprintf(out, "%*s[", level, "");
+		    ConfigPrint(lvalue, level + 2, out);
+		    fprintf(out, "] = ");
+		}
+
+		ConfigPrint((const ConfigObject *)*value, level + 4, out);
+		fprintf(out, "\n");
+
+		value = ArrayNext(array, &index);
 	    }
-
-	    ConfigPrint((const ConfigObject *)*value, level + 4, out);
-	    fprintf(out, "\n");
-
-	    value = ArrayNext(array, &index);
+	    fprintf(out, "%*s]", level < 2 ? 0 : level - 2, "");
+	} else {			// empty array
+	    fprintf(out, "[];%p", object);
 	}
-	fprintf(out, "%*s]", level, "");
     }
 }
 #endif
@@ -1409,7 +1440,7 @@ static void ParsePrint(const ConfigObject * object)
 **	@param array	config main array
 **	@param level	indent level
 **
-**	@todo nil?
+**	@todo nil? detect recursive structures and cycles
 */
 static void ParseDump(const Array * array, int level)
 {
@@ -1462,7 +1493,8 @@ static void ParsePush(const ConfigObject * object)
 {
     if (ParseSP + 1 == ParseStackSize) {	// reach stack end
 	ParseStackSize += 8;
-	ParseStack = realloc(ParseStack, ParseStackSize * sizeof(*ParseStack));
+	ParseStack =
+	    realloc(ParseStack, ParseStackSize * sizeof(ConfigObject *));
     }
     ParseStack[ParseSP++] = (ConfigObject *) object;
 }
@@ -1548,7 +1580,14 @@ static void ParseArrayAddItem(const ConfigObject * index,
 	ParseCurrentIndex = ConfigInteger(index) + 1;
 
     }
+#ifdef DEBUG_CORE_RC
+    if (*ArrayIns(&ParseCurrentArray, (size_t)index, (size_t)value)
+	!= (size_t)value) {
+	fprintf(stderr, "assign error\n");
+    }
+#else
     ArrayIns(&ParseCurrentArray, (size_t)index, (size_t)value);
+#endif
 }
 
 /**
@@ -1637,7 +1676,7 @@ static void ParseAssign(const ConfigObject * index, const ConfigObject * value)
 	    (size_t)value);
     }
     if (*vp != value) {
-	// FIXME: value already set, loose memory!
+	// FIXME: value already set, loose memory! cycles!
 	printf("need to overwrite old value\n");
 	*vp = value;
     }
@@ -1707,7 +1746,8 @@ static void ParseStringCat(const ConfigObject * o1, const ConfigObject * o2)
     s2 = ConfigString(o2);
 
     buf = alloca(strlen(s1) + strlen(s2) + 1);
-    strcat(stpcpy(buf, s1), s2);
+    strcpy(stpcpy(buf, s1), s2);
+    printf("'%s'\n", buf);
     ParsePushS(buf);
 }
 
@@ -1926,34 +1966,77 @@ static void ParseRecursive(const char *filename)
 // ----------------------------------------------------------------------------
 
 /**
+**	Define a configuration variable.
+**
+**	@param config	config dictionary.
+**	@param index	key
+**	@param value	data
+*/
+extern void ConfigDefine(Config * config, const ConfigObject * index,
+    const ConfigObject * value)
+{
+    ConfigObject *dict;
+    Array *array;
+    size_t *vp;
+
+    // FIXME: ConfigDictNoConst(config)
+    dict = (ConfigObject *) (config);
+    if (!ConfigIsArray(dict)) {
+	fprintf(stderr, "core-rc: config is no array\n");
+	return;
+    }
+    array = ConfigArray(dict);
+    vp = ArrayIns(&array, (size_t)index, (size_t)value);
+    if (*vp != (size_t)value) {
+	fprintf(stderr, "redefined old value\n");
+	*vp = (size_t)value;
+    }
+    dict->Pointer = array;
+}
+
+/**
 **	Read configuration from file stream.
 **
-**	@param ni	number of import contants
-**	@param import	import constants
+**	@param import	import another config (freed)
 **	@param file	configuration file stream
 **
-**	@todo constants and predefined values must be imported
+**	@returns configuration as dictionary.
+**
+**	@code
+**	    //
+**	    //	export constants
+**	    //
+**	    config = ConfigNewConfig(NULL);
+**	    for (i = 0; i < n; ++i) {
+**		ConfigDefine(config, ConfigNewString(import[i].Index),
+**		    ConfigNewString(import[i].Value));
+**	    }
+**	@endcode
 */
-Config *ConfigRead(int ni, const ConfigImport * import, FILE * file)
+Config *ConfigRead2(Config * import, FILE * file)
 {
-    int i;
-
-    ConfigStrings = StringPoolNew();
+    if (!ConfigStrings) {
+	ConfigStrings = StringPoolNew();
+#ifdef DEBUG_CORE_RC
+	fprintf(stderr, "new string pool\n");
+#endif
+    }
 
     ParseFile = file;
     ParseLineNr = 1;
 
     ParseStackSize = 16;
-    ParseStack = malloc(ParseStackSize * sizeof(*ParseStack));
+    ParseStack = malloc(ParseStackSize * sizeof(ConfigObject *));
     ParseSP = 0;
 
-    ParseCurrentArray = ArrayNew();
-    //
-    //	export constants
-    //
-    for (i = 0; i < ni; ++i) {
-	ArrayIns(&ParseCurrentArray, (size_t)ConfigNewString(import[i].Index),
-	    (size_t)ConfigNewString(import[i].Value));
+    if (!ConfigIsArray(ConfigDict(import))) {
+	if (import) {
+	    fprintf(stderr, "core-rc: import is no array\n");
+	}
+	ParseCurrentArray = ArrayNew();
+    } else {
+	ParseCurrentArray = ConfigArray(ConfigDict(import));
+	free(import);
     }
 
     ParseGlobalArray = ParseCurrentArray;
@@ -1986,18 +2069,16 @@ Config *ConfigRead(int ni, const ConfigImport * import, FILE * file)
 
     free(ParseStack);
 
-    return (Config *) ConfigNewArray(ParseCurrentArray);
+    return ConfigNewConfig(ParseCurrentArray);
 }
 
 /**
 **	Read configuration from file.
 **
-**	@param ni	number of import contants
-**	@param import	import constants
+**	@param import	import another config (freed)
 **	@param filename	configuration file name, use "-" for stdin.
 */
-Config *ConfigReadFile(int ni, const ConfigImport * import,
-    const char *filename)
+Config *ConfigReadFile2(Config * import, const char *filename)
 {
     FILE *file;
     Config *config;
@@ -2014,7 +2095,7 @@ Config *ConfigReadFile(int ni, const ConfigImport * import,
     }
     // read configuration file
     ParseName = filename;
-    config = ConfigRead(ni, import, file);
+    config = ConfigRead2(import, file);
 
     // close config file
     if (file != stdin) {
@@ -2022,6 +2103,99 @@ Config *ConfigReadFile(int ni, const ConfigImport * import,
     }
     return config;
 }
+
+#ifndef USE_CORE_RC_READ2
+
+/**
+**	Read configuration from file stream.
+**
+**	@param ni	number of import contants
+**	@param import	import constants
+**	@param file	configuration file stream
+**
+**	@todo constants and predefined values must be imported
+*/
+Config *ConfigRead(int ni, const ConfigImport * import, FILE * file)
+{
+    int i;
+    Array *array;
+
+#if defined(DEBUG_CORE_RC) || defined(DEBUG)
+    if (ConfigStrings) {
+	fprintf(stderr, "new core-rc reuses string pool\n");
+    }
+#endif
+    if (!ConfigStrings) {
+	ConfigStrings = StringPoolNew();
+#ifdef DEBUG_CORE_RC
+	fprintf(stderr, "new string pool\n");
+#endif
+    }
+
+    //
+    //	export constants
+    //
+    array = ArrayNew();
+    for (i = 0; i < ni; ++i) {
+	size_t *vp;
+	size_t v;
+
+	v = (size_t)ConfigNewString(import[i].Value);
+	vp = ArrayIns(&array, (size_t)ConfigNewString(import[i].Index), v);
+	if (*vp != v) {
+	    fprintf(stderr, "overwrite old value\n");
+	    *vp = v;
+	}
+    }
+
+    return ConfigRead2(ConfigNewConfig(array), file);
+}
+
+/**
+**	Read configuration from file.
+**
+**	@param ni	number of import contants
+**	@param import	import constants
+**	@param filename	configuration file name, use "-" for stdin.
+*/
+Config *ConfigReadFile(int ni, const ConfigImport * import,
+    const char *filename)
+{
+    int i;
+    Array *array;
+
+#if defined(DEBUG_CORE_RC) || defined(DEBUG)
+    if (ConfigStrings) {
+	fprintf(stderr, "new core-rc reuses string pool\n");
+    }
+#endif
+    if (!ConfigStrings) {
+	ConfigStrings = StringPoolNew();
+#ifdef DEBUG_CORE_RC
+	fprintf(stderr, "new string pool\n");
+#endif
+    }
+
+    //
+    //	export constants
+    //
+    array = ArrayNew();
+    for (i = 0; i < ni; ++i) {
+	size_t *vp;
+	size_t v;
+
+	v = (size_t)ConfigNewString(import[i].Value);
+	vp = ArrayIns(&array, (size_t)ConfigNewString(import[i].Index), v);
+	if (*vp != v) {
+	    fprintf(stderr, "overwrite old value\n");
+	    *vp = v;
+	}
+    }
+
+    return ConfigReadFile2(ConfigNewConfig(array), filename);
+}
+
+#endif
 
 /**
 **	Free all objects in an array.
@@ -2043,15 +2217,15 @@ static void ConfigArrayFree(ConfigObject * object)
     value = ArrayFirst(array, &index);
     while (value) {
 	if (ConfigIsArray((const ConfigObject *)*value)) {
-	    //printf("free: %0zx", *value); 
+	    //printf("free: %0zx", *value);
 	    //ConfigPrint((const ConfigObject*)*value, 1, stdout);
-	    //printf("\n"); 
+	    //printf("\n");
 	    ConfigArrayFree((ConfigObject *) * value);
 	}
 	if (ConfigIsArray((const ConfigObject *)index)) {
-	    //printf("free: %0zx", index); 
+	    //printf("free: %0zx", index);
 	    //ConfigPrint((const ConfigObject*)index, 1, stdout);
-	    //printf("\n"); 
+	    //printf("\n");
 	    ConfigArrayFree((ConfigObject *) index);
 	}
 	value = ArrayNext(array, &index);
@@ -2105,6 +2279,7 @@ int ConfigWriteFile(const Config * config, const char *filename)
 	return -1;
     }
     // write configuration file
+    fprintf(file, "; %s\n", filename);
     err = ConfigWrite(config, file);
 
     // close configuration file
@@ -2138,6 +2313,7 @@ void ConfigFreeMem(Config * config)
     ConfigArrayFree(dict);
 
     StringPoolDel(ConfigStrings);
+    ConfigStrings = NULL;
 }
 
 #ifdef CORE_RC_TEST			// {
@@ -2240,7 +2416,7 @@ int main(int argc, char *const argv[])
 	//
 	//	load and parse the config file
 	//
-	config = ConfigReadFile(0, NULL, file);
+	config = ConfigReadFile2(NULL, file);
 	//
 	//	returns NULL, if failures
 	//

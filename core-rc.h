@@ -113,6 +113,9 @@ extern ConfigObject *ConfigNewArray(const Array *);
     /// Create a new string object.
 extern ConfigObject *ConfigNewString(const char *);
 
+    /// Create a new config object.
+extern Config *ConfigNewConfig(const Array * array);
+
     /// Check integer value.
 extern int ConfigCheckInteger(const ConfigObject *, ssize_t *);
 
@@ -196,11 +199,22 @@ extern const ConfigObject *ConfigArrayNextFixedKey(const ConfigObject *,
     /// Print config object.
 extern void ConfigPrint(const ConfigObject *, int, FILE *);
 
+    /// Define a configuration variable.
+extern void ConfigDefine(Config *, const ConfigObject *, const ConfigObject *);
+
     /// Read configuration from file stream.
-extern Config *ConfigRead(int, const ConfigImport *, FILE *);
+extern Config *ConfigRead(int, const ConfigImport *, FILE *)
+    __attribute__((deprecated));
 
     /// Read configuration from file name.
-extern Config *ConfigReadFile(int, const ConfigImport *, const char *);
+extern Config *ConfigReadFile(int, const ConfigImport *, const char *)
+    __attribute__((deprecated));
+
+    /// Read configuration from file stream.
+extern Config *ConfigRead2(Config *, FILE *);
+
+    /// Read configuration from file name.
+extern Config *ConfigReadFile2(Config *, const char *);
 
     /// Write configuration to file stream.
 extern int ConfigWrite(const Config *, FILE *);
