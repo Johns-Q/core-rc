@@ -1747,7 +1747,6 @@ static void ParseStringCat(const ConfigObject * o1, const ConfigObject * o2)
 
     buf = alloca(strlen(s1) + strlen(s2) + 1);
     strcpy(stpcpy(buf, s1), s2);
-    printf("'%s'\n", buf);
     ParsePushS(buf);
 }
 
