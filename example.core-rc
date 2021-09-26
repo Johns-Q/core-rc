@@ -23,9 +23,30 @@
 ;	this is an end-to-line comment
 ;{	this a a block comment		;}
 
+; include some other config files
+include "included.core-rc"
+
 ;	a simple variable(s)
 
-ai = 1
-ad = 1.5e10
-as = "one"
+ai = 1			; integer
+ad = 1.5e10		; float
+as = "one"		; string
+aw = `word		; string too
+at = true		; number
+af = false		; number
+ab = nil		; nil
+aa = []			; array
+ai2 = ai		; 1 (value of ai)
+
+ai = 1			; same value overwritten, no warning
+ai = 2			; old value overwritten, warning and memory loose
+
+;	variables with tables, lists, ...
+
+t1 = [ 1 2 3 4 ]	; list
+t2 = [ [0] = 1
+	[1] = 2
+	[2] = 3
+	[3] = 4 ]	; same list with indices
+t3 = [ a = 1 b = 2 c = 3]	; structured
 
