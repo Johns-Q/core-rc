@@ -766,6 +766,23 @@ int ConfigCheckInteger(const ConfigObject * object, ssize_t * result)
 }
 
 /**
+**	Check if value is an unsigned integer object.
+**
+**	@param object		tagged object pointer
+**	@param[out] result	unsigned integer object is stored in result
+**
+**	@returns true if object is unsigned integer object, false otherwise.
+*/
+int ConfigCheckUnsigned(const ConfigObject * object, size_t *result)
+{
+    if (ConfigIsFixed(object)) {
+	*result = ConfigUnsigned(object);
+	return 1;
+    }
+    return 0;
+}
+
+/**
 **	Check if value is a floating point object.
 **
 **	@param object		tagged object pointer
