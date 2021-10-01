@@ -1845,6 +1845,10 @@ static void ParseVariable(const ConfigObject * v)
     const ConfigObject *value;
 
     value = (const ConfigObject *)ArrayGet(ParseGlobalArray, (size_t)v);
+    if (!value) {
+	fprintf(stderr, "core-rc: undefined `%s` used\n",
+	    ConfigIsWord(v) ? ConfigString(v) : "<expr>");
+    }
     ParsePush(value);
 }
 
