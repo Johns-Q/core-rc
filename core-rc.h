@@ -100,6 +100,11 @@ static inline ConfigObject *ConfigNewInteger(ssize_t integer)
     return (ConfigObject *) ((integer << 1) + 1);
 }
 
+/**
+**	Create a new fixed unsigned object.
+*/
+#define ConfigNewUnsigned ConfigNewInteger
+
 //////////////////////////////////////////////////////////////////////////////
 //	Prototypes
 //////////////////////////////////////////////////////////////////////////////
